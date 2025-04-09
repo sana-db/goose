@@ -26,7 +26,7 @@ impl Theme {
         }
     }
 
-    fn from_string(val: &str) -> Self {
+    fn from_config_str(val: &str) -> Self {
         if val.eq_ignore_ascii_case("light") {
             Theme::Light
         } else if val.eq_ignore_ascii_case("ansi") {
@@ -39,14 +39,11 @@ impl Theme {
 
 thread_local! {
     static CURRENT_THEME: RefCell<Theme> = RefCell::new(
-        Config::global()
-            .get_param::<String>("GOOSE_CLI_THEME")
-            .ok()
-            .map(|val| Theme::from_string(&val))
+        std::env::var("GOOSE_CLI_THEME").ok()
+            .map(|val| Theme::from_config_str(&val))
             .unwrap_or_else(||
-                std::env::var("GOOSE_CLI_THEME")
-                    .ok()
-                    .map(|val| Theme::from_string(&val))
+                Config::global().get_param::<String>("GOOSE_CLI_THEME").ok()
+                    .map(|val| Theme::from_config_str(&val))
                     .unwrap_or(Theme::Dark)
             )
     );
