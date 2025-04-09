@@ -25,26 +25,45 @@ impl Theme {
             Theme::Ansi => "base16",
         }
     }
+
+    fn from_string(val: &str) -> Self {
+        if val.eq_ignore_ascii_case("light") {
+            Theme::Light
+        } else if val.eq_ignore_ascii_case("ansi") {
+            Theme::Ansi
+        } else {
+            Theme::Dark
+        }
+    }
 }
 
 thread_local! {
     static CURRENT_THEME: RefCell<Theme> = RefCell::new(
-        std::env::var("GOOSE_CLI_THEME")
+        Config::global()
+            .get_param::<String>("GOOSE_CLI_THEME")
             .ok()
-            .map(|val| {
-                if val.eq_ignore_ascii_case("light") {
-                    Theme::Light
-                } else if val.eq_ignore_ascii_case("ansi") {
-                    Theme::Ansi
-                } else {
-                    Theme::Dark
-                }
-            })
-            .unwrap_or(Theme::Dark)
+            .map(|val| Theme::from_string(&val))
+            .unwrap_or_else(||
+                std::env::var("GOOSE_CLI_THEME")
+                    .ok()
+                    .map(|val| Theme::from_string(&val))
+                    .unwrap_or(Theme::Dark)
+            )
     );
 }
 
 pub fn set_theme(theme: Theme) {
+    let config = Config::global();
+    config
+        .set_param(
+            "GOOSE_CLI_THEME",
+            Value::String(match theme {
+                Theme::Light => "light".to_string(),
+                Theme::Dark => "dark".to_string(),
+                Theme::Ansi => "ansi".to_string(),
+            }),
+        )
+        .expect("Failed to set theme");
     CURRENT_THEME.with(|t| *t.borrow_mut() = theme);
 }
 
