@@ -36,7 +36,7 @@ impl Theme {
         }
     }
 
-    fn to_config_string(&self) -> String {
+    fn as_config_string(&self) -> String {
         match self {
             Theme::Light => "light".to_string(),
             Theme::Dark => "dark".to_string(),
@@ -60,7 +60,7 @@ thread_local! {
 pub fn set_theme(theme: Theme) {
     let config = Config::global();
     config
-        .set_param("GOOSE_CLI_THEME", Value::String(theme.to_config_string()))
+        .set_param("GOOSE_CLI_THEME", Value::String(theme.as_config_string()))
         .expect("Failed to set theme");
     CURRENT_THEME.with(|t| *t.borrow_mut() = theme);
 }
